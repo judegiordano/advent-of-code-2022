@@ -38,7 +38,8 @@ fn part2(sorted_list: &[(u64, u64)]) -> Result<u64> {
     Ok(total)
 }
 
-pub fn run(input: &str) -> Result<()> {
+pub fn run() -> Result<()> {
+    let input = include_str!("../inputs/day1.txt");
     let sorted_list = part1(input)?;
     match sorted_list.first() {
         Some((elf, calories)) => println!("top calories: {calories:?} held by elf {elf:?}"),
@@ -54,11 +55,10 @@ pub fn run(input: &str) -> Result<()> {
 pub mod tests {
 
     use super::*;
-    use crate::helpers::read_inputs_txt;
 
     #[test]
     fn day1_tests() -> Result<()> {
-        let input = read_inputs_txt("day1")?;
+        let input = include_str!("../inputs/day1.txt");
         let sorted_list = part1(&input)?;
         match sorted_list.first() {
             Some((_, calories)) => assert_eq!(*calories, 69626),
