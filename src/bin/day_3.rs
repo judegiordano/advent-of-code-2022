@@ -1,5 +1,8 @@
 use anyhow::Result;
-use rayon::prelude::{IndexedParallelIterator, IntoParallelRefIterator};
+use rayon::{
+    prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator},
+    str::ParallelString,
+};
 
 const INPUT: &str = include_str!("../../inputs/day3.txt");
 
@@ -28,19 +31,22 @@ impl CharHelpers for char {
 ///
 /// Uppercase item types `A` through `Z` have priorities 27 through 52
 fn part1() -> u32 {
-    let mut sum = 0;
-    for line in INPUT.lines() {
-        let len = line.len();
-        let (first_half, second_half) = line.split_at(len / 2);
-        let a = first_half.chars();
-        for char in a.into_iter() {
-            if second_half.contains(char) {
-                sum += char.score();
-                break;
-            }
-        }
-    }
-    sum
+    INPUT
+        .par_lines()
+        .fold(
+            || 0,
+            |mut count, line| {
+                let (first_half, second_half) = line.split_at(line.len() / 2);
+                for char in first_half.chars().into_iter() {
+                    if second_half.contains(char) {
+                        count += char.score();
+                        break;
+                    }
+                }
+                count
+            },
+        )
+        .sum::<u32>()
 }
 
 pub fn main() -> Result<()> {
