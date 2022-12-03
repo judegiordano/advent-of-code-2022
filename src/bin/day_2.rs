@@ -44,12 +44,8 @@ trait Game {
     fn game_tally(&self) -> u32;
 }
 
-trait Part1Key {
-    fn to_opponent_attack(&self) -> Attack;
-    fn to_my_attack(&self) -> Attack;
-}
-
-trait Part2Key {
+trait OutPutKey {
+    fn to_attack(&self) -> Attack;
     fn to_game_result(&self) -> GameOutcome;
 }
 
@@ -121,35 +117,21 @@ impl Game for Vec<GameOutput> {
     }
 }
 
-impl Part1Key for Option<&String> {
-    // map an opponents given input to a logical attack enum
-    fn to_opponent_attack(&self) -> Attack {
+impl OutPutKey for Option<&String> {
+    // map a given input to a logical attack enum
+    fn to_attack(&self) -> Attack {
         match *self {
             Some(play) => match play.trim().to_uppercase().as_ref() {
-                "A" => Attack::Rock,
-                "B" => Attack::Paper,
-                "C" => Attack::Scissors,
+                "A" | "X" => Attack::Rock,
+                "B" | "Y" => Attack::Paper,
+                "C" | "Z" => Attack::Scissors,
                 _ => panic!("handle this"),
             },
             None => panic!("handle this"),
         }
     }
 
-    // map my given input to a logical attack enum
-    fn to_my_attack(&self) -> Attack {
-        match self {
-            Some(play) => match play.trim().to_uppercase().as_ref() {
-                "X" => Attack::Rock,
-                "Y" => Attack::Paper,
-                "Z" => Attack::Scissors,
-                _ => panic!("handle this"),
-            },
-            None => panic!("handle this"),
-        }
-    }
-}
-
-impl Part2Key for Option<&String> {
+    // for pt 2, we discover our input key was actually game result
     fn to_game_result(&self) -> GameOutcome {
         match *self {
             Some(play) => match play.trim().to_uppercase().as_ref() {
@@ -172,8 +154,8 @@ fn part1() -> Vec<GameOutput> {
             .into_iter()
             .map(|a| a.to_string())
             .collect::<Vec<String>>();
-        let their_attack = throws.first().to_opponent_attack();
-        let my_attack = throws.last().to_my_attack();
+        let their_attack = throws.first().to_attack();
+        let my_attack = throws.last().to_attack();
         rounds.push(GameOutput::Part1((their_attack, my_attack)));
     }
     rounds
@@ -187,7 +169,7 @@ fn part2() -> Vec<GameOutput> {
             .into_iter()
             .map(|a| a.to_string())
             .collect::<Vec<String>>();
-        let their_attack = throws.first().to_opponent_attack();
+        let their_attack = throws.first().to_attack();
         let my_outcome = throws.last().to_game_result();
         rounds.push(GameOutput::Part2((their_attack, my_outcome)));
     }
