@@ -25,7 +25,7 @@ trait CharHelpers {
 
 trait ParCharsHelpers {
     fn fold_to_lookup(&self) -> LookupType;
-    fn fold_to_duplicate_lookup(&self, target: LookupType) -> LookupType;
+    fn fold_to_duplicate_lookup(&self, target: &LookupType) -> LookupType;
 }
 
 impl CharHelpers for char {
@@ -63,7 +63,7 @@ impl ParCharsHelpers for ParChars<'_> {
         lookup
     }
 
-    fn fold_to_duplicate_lookup(&self, target: LookupType) -> LookupType {
+    fn fold_to_duplicate_lookup(&self, target: &LookupType) -> LookupType {
         let lookup = self
             .to_owned()
             .into_par_iter()
@@ -130,7 +130,7 @@ fn part2() -> u32 {
                 // set baseline of char
                 let initial_lookup = first.fold_to_lookup();
                 // reduce to only duplicates
-                let potential_solutions = &second.fold_to_duplicate_lookup(initial_lookup);
+                let potential_solutions = second.fold_to_duplicate_lookup(&initial_lookup);
                 // break to final char that all 3 lines contain
                 for char in third {
                     if potential_solutions.get(&char).is_some() {
