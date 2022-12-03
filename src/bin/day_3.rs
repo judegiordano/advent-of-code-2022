@@ -3,11 +3,10 @@ use std::collections::BTreeMap;
 use anyhow::Result;
 use rayon::{
     prelude::{
-        IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelBridge,
-        ParallelIterator,
+        IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator,
     },
     slice::ParallelSlice,
-    str::ParallelString,
+    str::{Chars as ParChars, ParallelString},
 };
 
 const INPUT: &str = include_str!("../../inputs/day3.txt");
@@ -18,8 +17,15 @@ const ALPHABET: [char; 52] = [
     'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 ];
 
+type LookupType = BTreeMap<char, u32>;
+
 trait CharHelpers {
     fn score(&self) -> u32;
+}
+
+trait ParCharsHelpers {
+    fn fold_to_lookup(&self) -> LookupType;
+    fn fold_to_duplicate_lookup(&self, target: LookupType) -> LookupType;
 }
 
 impl CharHelpers for char {
@@ -33,11 +39,62 @@ impl CharHelpers for char {
     }
 }
 
+impl ParCharsHelpers for ParChars<'_> {
+    fn fold_to_lookup(&self) -> LookupType {
+        let lookup = self
+            .to_owned()
+            .into_par_iter()
+            .fold(
+                || BTreeMap::new(),
+                |mut tree, char| {
+                    tree.insert(char, char.score());
+                    tree
+                },
+            )
+            .reduce(
+                || BTreeMap::new(),
+                |mut tree, current| {
+                    current.iter().for_each(|(char, value)| {
+                        tree.insert(char.clone(), value.clone());
+                    });
+                    tree
+                },
+            );
+        lookup
+    }
+
+    fn fold_to_duplicate_lookup(&self, target: LookupType) -> LookupType {
+        let lookup = self
+            .to_owned()
+            .into_par_iter()
+            .fold(
+                || BTreeMap::new(),
+                |mut tree, char| {
+                    if target.get(&char).is_some() {
+                        tree.insert(char, char.score());
+                    }
+                    tree
+                },
+            )
+            .reduce(
+                || BTreeMap::new(),
+                |mut tree, current| {
+                    current.iter().for_each(|(char, value)| {
+                        tree.insert(char.clone(), value.clone());
+                    });
+                    tree
+                },
+            );
+        lookup
+    }
+}
+
 /// Lowercase item types `a` through `z` have priorities 1 through 26
 ///
 /// Uppercase item types `A` through `Z` have priorities 27 through 52
 fn part1() -> u32 {
-    INPUT
+    let start = std::time::Instant::now();
+    let answer = INPUT
         .par_lines()
         .fold(
             || 0,
@@ -52,51 +109,29 @@ fn part1() -> u32 {
                 count
             },
         )
-        .sum::<u32>()
+        .sum::<u32>();
+    println!("operation complete in: {:#?}", start.elapsed());
+    answer
 }
 
 fn part2() -> u32 {
+    let start = std::time::Instant::now();
     let lines = INPUT.par_lines().collect::<Vec<_>>();
     // split input into a vector of chunks of 3
     let chunks = lines.par_chunks(3).collect::<Vec<_>>();
-    chunks
+    let answer = chunks
         .par_iter()
         .fold(
             || 0,
             |mut answer, chunk| {
+                // find matches between 3 string inputs
                 let (first, second, third) =
-                    (chunk[0].chars(), chunk[1].par_chars(), chunk[2].chars());
-                let initial_lookup = first.into_iter().fold(BTreeMap::new(), |mut tree, char| {
-                    tree.insert(char, char.score());
-                    tree
-                });
-                let potential_solutions = &second
-                    .into_par_iter()
-                    .fold(
-                        || BTreeMap::new(),
-                        |mut tree, char| {
-                            if initial_lookup.get(&char).is_some() {
-                                tree.insert(char, char.score());
-                            }
-                            tree
-                        },
-                    )
-                    .reduce(
-                        || BTreeMap::new(),
-                        |mut tree, current| {
-                            current.iter().for_each(|(char, value)| {
-                                tree.insert(char.clone(), value.clone());
-                            });
-                            tree
-                        },
-                    );
-                // let potential_solutions =
-                //     &second.into_iter().fold(BTreeMap::new(), |mut tree, char| {
-                //         if initial_lookup.get(&char).is_some() {
-                //             tree.insert(char, char.score());
-                //         }
-                //         tree
-                //     });
+                    (chunk[0].par_chars(), chunk[1].par_chars(), chunk[2].chars());
+                // set baseline of char
+                let initial_lookup = first.fold_to_lookup();
+                // reduce to only duplicates
+                let potential_solutions = &second.fold_to_duplicate_lookup(initial_lookup);
+                // break to final char that all 3 lines contain
                 for char in third {
                     if potential_solutions.get(&char).is_some() {
                         answer += char.score();
@@ -107,16 +142,16 @@ fn part2() -> u32 {
                 answer
             },
         )
-        .sum::<u32>()
+        .sum::<u32>();
+    println!("operation complete in: {:#?}", start.elapsed());
+    answer
 }
 
 pub fn main() -> Result<()> {
-    let start = std::time::Instant::now();
     let total = part1();
     println!("{:#?}", total);
     let total = part2();
     println!("{:#?}", total);
-    println!("operation complete in: {:#?}", start.elapsed());
     Ok(())
 }
 
