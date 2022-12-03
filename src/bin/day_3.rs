@@ -2,7 +2,10 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 use rayon::{
-    prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator},
+    prelude::{
+        IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelBridge,
+        ParallelIterator,
+    },
     slice::ParallelSlice,
     str::ParallelString,
 };
@@ -54,36 +57,57 @@ fn part1() -> u32 {
 
 fn part2() -> u32 {
     let lines = INPUT.par_lines().collect::<Vec<_>>();
+    // split input into a vector of chunks of 3
     let chunks = lines.par_chunks(3).collect::<Vec<_>>();
-    // println!("len {:#?}", chunks.len());
-    // println!("{:#?}", chunks);
-    let mut answer = 0;
-    for chunk in chunks {
-        let mut potential_solutions = BTreeMap::new();
-        let initial_lookup =
-            chunk[0]
-                .chars()
-                .into_iter()
-                .fold(BTreeMap::new(), |mut tree, char| {
+    chunks
+        .par_iter()
+        .fold(
+            || 0,
+            |mut answer, chunk| {
+                let (first, second, third) =
+                    (chunk[0].chars(), chunk[1].par_chars(), chunk[2].chars());
+                let initial_lookup = first.into_iter().fold(BTreeMap::new(), |mut tree, char| {
                     tree.insert(char, char.score());
                     tree
                 });
-        for char in chunk[1].chars() {
-            let exists = initial_lookup.get(&char);
-            if exists.is_some() {
-                potential_solutions.insert(char, char.score());
-                // we should keep looping for more potential repeats
-            }
-        }
-        for char in chunk[2].chars() {
-            if potential_solutions.get(&char).is_some() {
-                answer += char.score();
-                // no need to continue
-                break;
-            }
-        }
-    }
-    answer
+                let potential_solutions = &second
+                    .into_par_iter()
+                    .fold(
+                        || BTreeMap::new(),
+                        |mut tree, char| {
+                            if initial_lookup.get(&char).is_some() {
+                                tree.insert(char, char.score());
+                            }
+                            tree
+                        },
+                    )
+                    .reduce(
+                        || BTreeMap::new(),
+                        |mut tree, current| {
+                            current.iter().for_each(|(char, value)| {
+                                tree.insert(char.clone(), value.clone());
+                            });
+                            tree
+                        },
+                    );
+                // let potential_solutions =
+                //     &second.into_iter().fold(BTreeMap::new(), |mut tree, char| {
+                //         if initial_lookup.get(&char).is_some() {
+                //             tree.insert(char, char.score());
+                //         }
+                //         tree
+                //     });
+                for char in third {
+                    if potential_solutions.get(&char).is_some() {
+                        answer += char.score();
+                        // no need to continue
+                        break;
+                    }
+                }
+                answer
+            },
+        )
+        .sum::<u32>()
 }
 
 pub fn main() -> Result<()> {
