@@ -1,6 +1,9 @@
+use std::collections::BTreeMap;
+
 use anyhow::Result;
 use rayon::{
     prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator},
+    slice::ParallelSlice,
     str::ParallelString,
 };
 
@@ -49,9 +52,45 @@ fn part1() -> u32 {
         .sum::<u32>()
 }
 
+fn part2() -> u32 {
+    let lines = INPUT.par_lines().collect::<Vec<_>>();
+    let chunks = lines.par_chunks(3).collect::<Vec<_>>();
+    // println!("len {:#?}", chunks.len());
+    // println!("{:#?}", chunks);
+    let mut answer = 0;
+    for chunk in chunks {
+        let mut potential_solutions = BTreeMap::new();
+        let initial_lookup =
+            chunk[0]
+                .chars()
+                .into_iter()
+                .fold(BTreeMap::new(), |mut tree, char| {
+                    tree.insert(char, char.score());
+                    tree
+                });
+        for char in chunk[1].chars() {
+            let exists = initial_lookup.get(&char);
+            if exists.is_some() {
+                potential_solutions.insert(char, char.score());
+                // we should keep looping for more potential repeats
+            }
+        }
+        for char in chunk[2].chars() {
+            if potential_solutions.get(&char).is_some() {
+                answer += char.score();
+                // no need to continue
+                break;
+            }
+        }
+    }
+    answer
+}
+
 pub fn main() -> Result<()> {
     let start = std::time::Instant::now();
     let total = part1();
+    println!("{:#?}", total);
+    let total = part2();
     println!("{:#?}", total);
     println!("operation complete in: {:#?}", start.elapsed());
     Ok(())
@@ -67,6 +106,8 @@ pub mod tests {
     fn day3_tests() -> Result<()> {
         let total = part1();
         assert_eq!(total, 7817);
+        let total = part2();
+        assert_eq!(total, 2444);
         Ok(())
     }
 }
