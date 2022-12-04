@@ -6,15 +6,16 @@ use rayon::{
         FromParallelIterator, IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator,
     },
     slice::ParallelSliceMut,
+    str::ParallelString,
 };
 
 const INPUT: &str = include_str!("../../inputs/day1.txt");
 
-fn part1() -> Result<Vec<(u64, u64)>> {
+fn part1(lines: &[&str]) -> Result<Vec<(u64, u64)>> {
     let start = std::time::Instant::now();
     let mut calories_by_elf: BTreeMap<u64, u64> = BTreeMap::new();
     let mut elf = 0;
-    for a in INPUT.lines() {
+    for a in lines {
         // whitespace in input used as separator
         if a.is_empty() {
             // new elf
@@ -45,7 +46,8 @@ fn part2(sorted_list: &[(u64, u64)]) -> u64 {
 }
 
 pub fn main() -> Result<()> {
-    let sorted_list = part1()?;
+    let lines = INPUT.par_lines().collect::<Vec<_>>();
+    let sorted_list = part1(&lines)?;
     match sorted_list.first() {
         Some((elf, calories)) => println!("top calories: {calories:?} held by elf {elf:?}"),
         None => anyhow::bail!("empty"),
@@ -63,7 +65,8 @@ pub mod tests {
 
     #[test]
     fn day1_tests() -> Result<()> {
-        let sorted_list = part1()?;
+        let lines = INPUT.par_lines().collect::<Vec<_>>();
+        let sorted_list = part1(&lines)?;
         match sorted_list.first() {
             Some((_, calories)) => assert_eq!(*calories, 69626),
             None => anyhow::bail!("empty"),

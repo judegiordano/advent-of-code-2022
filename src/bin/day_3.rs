@@ -23,9 +23,26 @@ trait CharHelpers {
     fn score(&self) -> u32;
 }
 
+trait TupleCharSearcher {
+    fn find_char_intersection(&self) -> u32;
+}
+
 trait ParCharsHelpers {
     fn fold_to_lookup(&self) -> LookupType;
     fn fold_to_duplicate_lookup(&self, target: &LookupType) -> LookupType;
+}
+
+impl TupleCharSearcher for (&str, &str) {
+    fn find_char_intersection(&self) -> u32 {
+        let mut count = 0;
+        for char in self.0.chars() {
+            if self.1.contains(char) {
+                count += char.score();
+                return count;
+            }
+        }
+        count
+    }
 }
 
 impl CharHelpers for char {
@@ -99,20 +116,14 @@ impl ParCharsHelpers for ParChars<'_> {
 /// Lowercase item types `a` through `z` have priorities 1 through 26
 ///
 /// Uppercase item types `A` through `Z` have priorities 27 through 52
-fn part1() -> u32 {
+fn part1(lines: &[&str]) -> u32 {
     let start = std::time::Instant::now();
-    let answer = INPUT
-        .par_lines()
+    let answer = lines
+        .par_iter()
         .fold(
             || 0,
             |mut count, line| {
-                let (first_half, second_half) = line.split_at(line.len() / 2);
-                for char in first_half.chars() {
-                    if second_half.contains(char) {
-                        count += char.score();
-                        break;
-                    }
-                }
+                count += line.split_at(line.len() / 2).find_char_intersection();
                 count
             },
         )
@@ -121,9 +132,8 @@ fn part1() -> u32 {
     answer
 }
 
-fn part2() -> u32 {
+fn part2(lines: &[&str]) -> u32 {
     let start = std::time::Instant::now();
-    let lines = INPUT.par_lines().collect::<Vec<_>>();
     // split input into a vector of chunks of 3
     let chunks = lines.par_chunks(3).collect::<Vec<_>>();
     let answer = chunks
@@ -155,9 +165,10 @@ fn part2() -> u32 {
 }
 
 pub fn main() -> Result<()> {
-    let total = part1();
+    let lines = INPUT.par_lines().collect::<Vec<_>>();
+    let total = part1(&lines);
     println!("{total:#?}");
-    let total = part2();
+    let total = part2(&lines);
     println!("{total:#?}");
     Ok(())
 }
@@ -170,9 +181,10 @@ pub mod tests {
 
     #[test]
     fn day3_tests() -> Result<()> {
-        let total = part1();
+        let lines = INPUT.par_lines().collect::<Vec<_>>();
+        let total = part1(&lines);
         assert_eq!(total, 7817);
-        let total = part2();
+        let total = part2(&lines);
         assert_eq!(total, 2444);
         Ok(())
     }

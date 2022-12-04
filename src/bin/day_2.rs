@@ -1,5 +1,8 @@
 use anyhow::Result;
-use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+use rayon::{
+    prelude::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
+    str::ParallelString,
+};
 
 const INPUT: &str = include_str!("../../inputs/day2.txt");
 
@@ -145,45 +148,73 @@ impl OutPutKey for Option<&String> {
     }
 }
 
-fn part1() -> Result<Vec<GameOutput>> {
+fn part1(lines: &[&str]) -> Vec<GameOutput> {
     let start = std::time::Instant::now();
-    let mut rounds = vec![];
-    for line in INPUT.lines() {
-        let line = line.to_string();
-        let throws = line
-            .split(' ')
-            .into_iter()
-            .map(std::string::ToString::to_string)
-            .collect::<Vec<String>>();
-        let their_attack = throws.first().to_attack()?;
-        let my_attack = throws.last().to_attack()?;
-        rounds.push(GameOutput::Part1((their_attack, my_attack)));
-    }
+    let rounds = lines
+        .par_iter()
+        .map(|line| -> GameOutput {
+            let throws = line
+                .split_whitespace()
+                .into_iter()
+                .map(std::string::ToString::to_string)
+                .collect::<Vec<String>>();
+            let their_attack = match throws.first().to_attack() {
+                Ok(attack) => attack,
+                Err(err) => {
+                    eprintln!("{err}");
+                    std::process::exit(1)
+                }
+            };
+            let my_attack = match throws.last().to_attack() {
+                Ok(attack) => attack,
+                Err(err) => {
+                    eprintln!("{err}");
+                    std::process::exit(1)
+                }
+            };
+            GameOutput::Part1((their_attack, my_attack))
+        })
+        .collect::<Vec<_>>();
     println!("operation complete in: {:#?}", start.elapsed());
-    Ok(rounds)
+    rounds
 }
 
-fn part2() -> Result<Vec<GameOutput>> {
+fn part2(lines: &[&str]) -> Vec<GameOutput> {
     let start = std::time::Instant::now();
-    let mut rounds = vec![];
-    for line in INPUT.lines() {
-        let throws = line
-            .split(' ')
-            .into_iter()
-            .map(std::string::ToString::to_string)
-            .collect::<Vec<String>>();
-        let their_attack = throws.first().to_attack()?;
-        let my_outcome = throws.last().to_game_result()?;
-        rounds.push(GameOutput::Part2((their_attack, my_outcome)));
-    }
+    let rounds = lines
+        .par_iter()
+        .map(|line| -> GameOutput {
+            let throws = line
+                .split_whitespace()
+                .into_iter()
+                .map(std::string::ToString::to_string)
+                .collect::<Vec<String>>();
+            let their_attack = match throws.first().to_attack() {
+                Ok(attack) => attack,
+                Err(err) => {
+                    eprintln!("{err}");
+                    std::process::exit(1)
+                }
+            };
+            let game_outcome = match throws.last().to_game_result() {
+                Ok(outcome) => outcome,
+                Err(err) => {
+                    eprintln!("{err}");
+                    std::process::exit(1)
+                }
+            };
+            GameOutput::Part2((their_attack, game_outcome))
+        })
+        .collect::<Vec<_>>();
     println!("operation complete in: {:#?}", start.elapsed());
-    Ok(rounds)
+    rounds
 }
 
 pub fn main() -> Result<()> {
-    let total = part1()?.game_tally();
+    let lines = INPUT.par_lines().collect::<Vec<_>>();
+    let total = part1(&lines).game_tally();
     println!("initial game info total: {total:#?}");
-    let total = part2()?.game_tally();
+    let total = part2(&lines).game_tally();
     println!("final game info total: {total:#?}");
     Ok(())
 }
@@ -196,9 +227,10 @@ pub mod tests {
 
     #[test]
     fn day2_tests() -> Result<()> {
-        let total = part1()?.game_tally();
+        let lines = INPUT.par_lines().collect::<Vec<_>>();
+        let total = part1(&lines).game_tally();
         assert_eq!(total, 15691);
-        let total = part2()?.game_tally();
+        let total = part2(&lines).game_tally();
         assert_eq!(total, 12989);
         Ok(())
     }
