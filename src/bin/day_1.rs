@@ -1,3 +1,4 @@
+use advent_of_code_2022::utils::init_logger;
 use rayon::{
     prelude::{
         FromParallelIterator, IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator,
@@ -6,30 +7,8 @@ use rayon::{
     str::ParallelString,
 };
 use std::collections::BTreeMap;
-use tracing_subscriber::FmtSubscriber;
 
 const INPUT: &str = include_str!("../../inputs/day1.txt");
-
-fn init_logger() {
-    let level = std::env::var("LOG_LEVEL").map_or(tracing::Level::ERROR, |found| {
-        match found.trim().to_uppercase().as_ref() {
-            "INFO" => tracing::Level::INFO,
-            "DEBUG" => tracing::Level::DEBUG,
-            "WARN" => tracing::Level::WARN,
-            "TRACE" => tracing::Level::TRACE,
-            _ => tracing::Level::ERROR,
-        }
-    });
-    match tracing::subscriber::set_global_default(
-        FmtSubscriber::builder().with_max_level(level).finish(),
-    ) {
-        Ok(_) => (),
-        Err(err) => {
-            tracing::error!("{err}");
-            std::process::exit(1)
-        }
-    }
-}
 
 pub fn part1(lines: &[&str]) -> Vec<(u64, u64)> {
     let start = std::time::Instant::now();

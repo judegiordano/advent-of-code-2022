@@ -70,4 +70,9 @@ jobs:
           override: true
 
       - name: cargo test
-        run: cargo test -- --test-threads 2 --show-output
+        run: |
+          cargo test -- \
+          --test-threads 2 \
+          --show-output \
+    env:
+      LOG_LEVEL: INFO

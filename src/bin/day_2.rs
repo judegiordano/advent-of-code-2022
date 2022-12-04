@@ -1,3 +1,4 @@
+use advent_of_code_2022::utils::init_logger;
 use anyhow::Result;
 use rayon::{
     prelude::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
@@ -161,21 +162,21 @@ fn part1(lines: &[&str]) -> Vec<GameOutput> {
             let their_attack = match throws.first().to_attack() {
                 Ok(attack) => attack,
                 Err(err) => {
-                    eprintln!("{err}");
+                    tracing::error!("{err}");
                     std::process::exit(1)
                 }
             };
             let my_attack = match throws.last().to_attack() {
                 Ok(attack) => attack,
                 Err(err) => {
-                    eprintln!("{err}");
+                    tracing::error!("{err}");
                     std::process::exit(1)
                 }
             };
             GameOutput::Part1((their_attack, my_attack))
         })
         .collect::<Vec<_>>();
-    println!("operation complete in: {:#?}", start.elapsed());
+    tracing::info!("operation complete in: {:#?}", start.elapsed());
     rounds
 }
 
@@ -192,30 +193,31 @@ fn part2(lines: &[&str]) -> Vec<GameOutput> {
             let their_attack = match throws.first().to_attack() {
                 Ok(attack) => attack,
                 Err(err) => {
-                    eprintln!("{err}");
+                    tracing::error!("{err}");
                     std::process::exit(1)
                 }
             };
             let game_outcome = match throws.last().to_game_result() {
                 Ok(outcome) => outcome,
                 Err(err) => {
-                    eprintln!("{err}");
+                    tracing::error!("{err}");
                     std::process::exit(1)
                 }
             };
             GameOutput::Part2((their_attack, game_outcome))
         })
         .collect::<Vec<_>>();
-    println!("operation complete in: {:#?}", start.elapsed());
+    tracing::info!("operation complete in: {:#?}", start.elapsed());
     rounds
 }
 
 pub fn main() -> Result<()> {
+    init_logger();
     let lines = INPUT.par_lines().collect::<Vec<_>>();
     let total = part1(&lines).game_tally();
-    println!("initial game info total: {total:#?}");
+    tracing::info!("initial game info total: {total:#?}");
     let total = part2(&lines).game_tally();
-    println!("final game info total: {total:#?}");
+    tracing::info!("final game info total: {total:#?}");
     Ok(())
 }
 
@@ -227,6 +229,7 @@ pub mod tests {
 
     #[test]
     fn day2_tests() -> Result<()> {
+        init_logger();
         let lines = INPUT.par_lines().collect::<Vec<_>>();
         let total = part1(&lines).game_tally();
         assert_eq!(total, 15691);

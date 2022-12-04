@@ -1,6 +1,4 @@
-use std::collections::BTreeMap;
-
-use anyhow::Result;
+use advent_of_code_2022::utils::init_logger;
 use rayon::{
     prelude::{
         IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator,
@@ -8,6 +6,7 @@ use rayon::{
     slice::ParallelSlice,
     str::{Chars as ParChars, ParallelString},
 };
+use std::collections::BTreeMap;
 
 const INPUT: &str = include_str!("../../inputs/day3.txt");
 
@@ -52,13 +51,13 @@ impl CharHelpers for char {
             .position_last(|a| a == self)
             .map_or_else(
                 || {
-                    eprintln!("no char found");
+                    tracing::error!("no char found");
                     std::process::exit(1)
                 },
                 |score| match (score + 1).try_into() {
                     Ok(score) => score,
                     Err(err) => {
-                        eprintln!("unable to cast score {err}");
+                        tracing::error!("unable to cast score {err}");
                         std::process::exit(1)
                     }
                 },
@@ -127,7 +126,7 @@ fn part1(lines: &[&str]) -> u32 {
             },
         )
         .sum::<u32>();
-    println!("operation complete in: {:#?}", start.elapsed());
+    tracing::info!("operation complete in: {:#?}", start.elapsed());
     answer
 }
 
@@ -159,17 +158,17 @@ fn part2(lines: &[&str]) -> u32 {
             },
         )
         .sum::<u32>();
-    println!("operation complete in: {:#?}", start.elapsed());
+    tracing::info!("operation complete in: {:#?}", start.elapsed());
     answer
 }
 
-pub fn main() -> Result<()> {
+pub fn main() {
+    init_logger();
     let lines = INPUT.par_lines().collect::<Vec<_>>();
     let total = part1(&lines);
-    println!("{total:#?}");
+    tracing::info!("{total:#?}");
     let total = part2(&lines);
-    println!("{total:#?}");
-    Ok(())
+    tracing::info!("{total:#?}");
 }
 
 #[allow(unused_imports)]
@@ -179,12 +178,12 @@ pub mod tests {
     use super::*;
 
     #[test]
-    fn day3_tests() -> Result<()> {
+    fn day3_tests() {
+        init_logger();
         let lines = INPUT.par_lines().collect::<Vec<_>>();
         let total = part1(&lines);
         assert_eq!(total, 7817);
         let total = part2(&lines);
         assert_eq!(total, 2444);
-        Ok(())
     }
 }

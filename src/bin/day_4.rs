@@ -1,5 +1,6 @@
 use std::ops::Not;
 
+use advent_of_code_2022::utils::init_logger;
 use array_tool::vec::Intersect;
 use rayon::{
     prelude::{IntoParallelRefIterator, ParallelIterator},
@@ -22,7 +23,7 @@ impl StringHelper for Option<&&str> {
     fn input_to_vec(&self) -> Vec<u32> {
         self.map_or_else(
             || {
-                eprintln!("no vec option found");
+                tracing::error!("no vec option found");
                 std::process::exit(1);
             },
             |str| str.split('-').collect::<Vec<_>>().to_num_vec(),
@@ -32,13 +33,13 @@ impl StringHelper for Option<&&str> {
     fn option_to_num(&self) -> u32 {
         self.map_or_else(
             || {
-                eprintln!("no option found");
+                tracing::error!("no option found");
                 std::process::exit(1);
             },
             |val| match val.parse::<u32>() {
                 Ok(int) => int,
                 Err(err) => {
-                    eprintln!("error parsing int {err}");
+                    tracing::error!("error parsing int {err}");
                     std::process::exit(1)
                 }
             },
@@ -48,7 +49,7 @@ impl StringHelper for Option<&&str> {
     fn get_str(&self) -> &str {
         self.map_or_else(
             || {
-                eprintln!("no string option found");
+                tracing::error!("no string option found");
                 std::process::exit(1)
             },
             |str| str,
@@ -87,7 +88,7 @@ fn part1(lines: &[&str]) -> u32 {
             },
         )
         .sum::<u32>();
-    println!("operation complete in: {:#?}", start.elapsed());
+    tracing::info!("operation complete in: {:#?}", start.elapsed());
     total
 }
 
@@ -108,16 +109,17 @@ fn part2(lines: &[&str]) -> u32 {
             },
         )
         .sum::<u32>();
-    println!("operation complete in: {:#?}", start.elapsed());
+    tracing::info!("operation complete in: {:#?}", start.elapsed());
     total
 }
 
 pub fn main() {
+    init_logger();
     let lines = INPUT.par_lines().collect::<Vec<_>>();
     let answer = part1(&lines);
-    println!("{answer:#?}");
+    tracing::info!("{answer:#?}");
     let answer2 = part2(&lines);
-    println!("{answer2:#?}");
+    tracing::info!("{answer2:#?}");
 }
 
 #[allow(unused_imports)]
@@ -127,7 +129,8 @@ pub mod tests {
     use super::*;
 
     #[test]
-    fn day3_tests() {
+    fn day4_tests() {
+        init_logger();
         let lines = INPUT.par_lines().collect::<Vec<_>>();
         let total = part1(&lines);
         assert_eq!(total, 503);
