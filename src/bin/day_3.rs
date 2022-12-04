@@ -100,7 +100,6 @@ impl ParCharsHelpers for ParChars<'_> {
                     tree
                 },
             )
-            // .reduce(|| BTreeMap::new(), BTreeMap::new() || {});
             .reduce(
                 || BTreeMap::new(),
                 |mut tree, current| {
