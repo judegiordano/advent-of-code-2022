@@ -23,3 +23,4 @@ lto = true        # enable link time optimization
 [dependencies]
 anyhow = "1.0.66"
 rayon = "1.6.0"
+array_tool = "1.0.3"
