@@ -146,6 +146,7 @@ impl OutPutKey for Option<&String> {
 }
 
 fn part1() -> Result<Vec<GameOutput>> {
+    let start = std::time::Instant::now();
     let mut rounds = vec![];
     for line in INPUT.lines() {
         let line = line.to_string();
@@ -158,10 +159,12 @@ fn part1() -> Result<Vec<GameOutput>> {
         let my_attack = throws.last().to_attack()?;
         rounds.push(GameOutput::Part1((their_attack, my_attack)));
     }
+    println!("operation complete in: {:#?}", start.elapsed());
     Ok(rounds)
 }
 
 fn part2() -> Result<Vec<GameOutput>> {
+    let start = std::time::Instant::now();
     let mut rounds = vec![];
     for line in INPUT.lines() {
         let throws = line
@@ -173,16 +176,15 @@ fn part2() -> Result<Vec<GameOutput>> {
         let my_outcome = throws.last().to_game_result()?;
         rounds.push(GameOutput::Part2((their_attack, my_outcome)));
     }
+    println!("operation complete in: {:#?}", start.elapsed());
     Ok(rounds)
 }
 
 pub fn main() -> Result<()> {
-    let start = std::time::Instant::now();
     let total = part1()?.game_tally();
     println!("initial game info total: {total:#?}");
     let total = part2()?.game_tally();
     println!("final game info total: {total:#?}");
-    println!("operation complete in: {:#?}", start.elapsed());
     Ok(())
 }
 

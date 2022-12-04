@@ -10,6 +10,12 @@ opt-level = 3     # 0-3
 strip = 'symbols' # strip symbols from binary
 lto = true        # enable link time optimization
 
+[profile.test]
+panic = "abort"
+opt-level = 3     # 0-3
+strip = 'symbols' # strip symbols from binary
+lto = true        # enable link time optimization
+
 [dependencies]
 anyhow = "1.0.66"
 rayon = "1.6.0"
