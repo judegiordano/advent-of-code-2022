@@ -45,8 +45,8 @@ trait Game {
 }
 
 trait OutPutKey {
-    fn to_attack(&self) -> Attack;
-    fn to_game_result(&self) -> GameOutcome;
+    fn to_attack(&self) -> Result<Attack>;
+    fn to_game_result(&self) -> Result<GameOutcome>;
 }
 
 impl Round for GameOutput {
@@ -119,68 +119,68 @@ impl Game for Vec<GameOutput> {
 
 impl OutPutKey for Option<&String> {
     // map a given input to a logical attack enum
-    fn to_attack(&self) -> Attack {
+    fn to_attack(&self) -> Result<Attack> {
         match *self {
             Some(play) => match play.trim().to_uppercase().as_ref() {
-                "A" | "X" => Attack::Rock,
-                "B" | "Y" => Attack::Paper,
-                "C" | "Z" => Attack::Scissors,
-                _ => panic!("handle this"),
+                "A" | "X" => Ok(Attack::Rock),
+                "B" | "Y" => Ok(Attack::Paper),
+                "C" | "Z" => Ok(Attack::Scissors),
+                _ => anyhow::bail!("{play} not supported"),
             },
-            None => panic!("handle this"),
+            None => anyhow::bail!("play option not found"),
         }
     }
 
     // for pt 2, we discover our input key was actually game result
-    fn to_game_result(&self) -> GameOutcome {
+    fn to_game_result(&self) -> Result<GameOutcome> {
         match *self {
             Some(play) => match play.trim().to_uppercase().as_ref() {
-                "X" => GameOutcome::Lose,
-                "Y" => GameOutcome::Draw,
-                "Z" => GameOutcome::Win,
-                _ => panic!("handle this"),
+                "X" => Ok(GameOutcome::Lose),
+                "Y" => Ok(GameOutcome::Draw),
+                "Z" => Ok(GameOutcome::Win),
+                _ => anyhow::bail!("{play} not supported"),
             },
-            None => panic!("handle this"),
+            None => anyhow::bail!("play option not found"),
         }
     }
 }
 
-fn part1() -> Vec<GameOutput> {
+fn part1() -> Result<Vec<GameOutput>> {
     let mut rounds = vec![];
     for line in INPUT.lines() {
         let line = line.to_string();
         let throws = line
             .split(' ')
             .into_iter()
-            .map(|a| a.to_string())
+            .map(std::string::ToString::to_string)
             .collect::<Vec<String>>();
-        let their_attack = throws.first().to_attack();
-        let my_attack = throws.last().to_attack();
+        let their_attack = throws.first().to_attack()?;
+        let my_attack = throws.last().to_attack()?;
         rounds.push(GameOutput::Part1((their_attack, my_attack)));
     }
-    rounds
+    Ok(rounds)
 }
 
-fn part2() -> Vec<GameOutput> {
+fn part2() -> Result<Vec<GameOutput>> {
     let mut rounds = vec![];
     for line in INPUT.lines() {
         let throws = line
             .split(' ')
             .into_iter()
-            .map(|a| a.to_string())
+            .map(std::string::ToString::to_string)
             .collect::<Vec<String>>();
-        let their_attack = throws.first().to_attack();
-        let my_outcome = throws.last().to_game_result();
+        let their_attack = throws.first().to_attack()?;
+        let my_outcome = throws.last().to_game_result()?;
         rounds.push(GameOutput::Part2((their_attack, my_outcome)));
     }
-    rounds
+    Ok(rounds)
 }
 
 pub fn main() -> Result<()> {
     let start = std::time::Instant::now();
-    let total = part1().game_tally();
+    let total = part1()?.game_tally();
     println!("initial game info total: {total:#?}");
-    let total = part2().game_tally();
+    let total = part2()?.game_tally();
     println!("final game info total: {total:#?}");
     println!("operation complete in: {:#?}", start.elapsed());
     Ok(())
@@ -194,9 +194,9 @@ pub mod tests {
 
     #[test]
     fn day2_tests() -> Result<()> {
-        let total = part1().game_tally();
+        let total = part1()?.game_tally();
         assert_eq!(total, 15691);
-        let total = part2().game_tally();
+        let total = part2()?.game_tally();
         assert_eq!(total, 12989);
         Ok(())
     }

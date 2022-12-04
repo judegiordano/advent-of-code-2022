@@ -30,19 +30,28 @@ trait ParCharsHelpers {
 
 impl CharHelpers for char {
     fn score(&self) -> u32 {
-        if let Some(score) = ALPHABET.par_iter().position_last(|a| a == self) {
-            let score = score as u32 + 1;
-            score
-        } else {
-            panic!("handle later")
-        }
+        ALPHABET
+            .par_iter()
+            .position_last(|a| a == self)
+            .map_or_else(
+                || {
+                    eprintln!("no char found");
+                    std::process::exit(1)
+                },
+                |score| match (score + 1).try_into() {
+                    Ok(score) => score,
+                    Err(err) => {
+                        eprintln!("unable to cast score {err}");
+                        std::process::exit(1)
+                    }
+                },
+            )
     }
 }
 
 impl ParCharsHelpers for ParChars<'_> {
     fn fold_to_lookup(&self) -> LookupType {
-        let lookup = self
-            .to_owned()
+        self.clone()
             .into_par_iter()
             .fold(
                 || BTreeMap::new(),
@@ -54,18 +63,16 @@ impl ParCharsHelpers for ParChars<'_> {
             .reduce(
                 || BTreeMap::new(),
                 |mut tree, current| {
-                    current.iter().for_each(|(char, value)| {
-                        tree.insert(char.clone(), value.clone());
-                    });
+                    for (char, value) in &current {
+                        tree.insert(*char, *value);
+                    }
                     tree
                 },
-            );
-        lookup
+            )
     }
 
     fn fold_to_duplicate_lookup(&self, target: &LookupType) -> LookupType {
-        let lookup = self
-            .to_owned()
+        self.clone()
             .into_par_iter()
             .fold(
                 || BTreeMap::new(),
@@ -76,16 +83,16 @@ impl ParCharsHelpers for ParChars<'_> {
                     tree
                 },
             )
+            // .reduce(|| BTreeMap::new(), BTreeMap::new() || {});
             .reduce(
                 || BTreeMap::new(),
                 |mut tree, current| {
-                    current.iter().for_each(|(char, value)| {
-                        tree.insert(char.clone(), value.clone());
-                    });
+                    for (char, value) in &current {
+                        tree.insert(*char, *value);
+                    }
                     tree
                 },
-            );
-        lookup
+            )
     }
 }
 
@@ -100,7 +107,7 @@ fn part1() -> u32 {
             || 0,
             |mut count, line| {
                 let (first_half, second_half) = line.split_at(line.len() / 2);
-                for char in first_half.chars().into_iter() {
+                for char in first_half.chars() {
                     if second_half.contains(char) {
                         count += char.score();
                         break;
@@ -149,9 +156,9 @@ fn part2() -> u32 {
 
 pub fn main() -> Result<()> {
     let total = part1();
-    println!("{:#?}", total);
+    println!("{total:#?}");
     let total = part2();
-    println!("{:#?}", total);
+    println!("{total:#?}");
     Ok(())
 }
 
