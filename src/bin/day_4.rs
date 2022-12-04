@@ -1,0 +1,38 @@
+use rayon::{prelude::ParallelIterator, str::ParallelString};
+
+const INPUT: &str = include_str!("../../inputs/day4.txt");
+
+fn part1(lines: &[&str]) -> u32 {
+    let start = std::time::Instant::now();
+    let mut total = 0;
+    for line in lines {
+        let elves = line.split(',').collect::<Vec<_>>();
+        let first = elves.first().unwrap().split('-').collect::<Vec<_>>();
+        let (a, b) = (
+            first.first().unwrap().parse::<u32>().unwrap(),
+            first.last().unwrap().parse::<u32>().unwrap(),
+        );
+        let last = elves.last().unwrap().split('-').collect::<Vec<_>>();
+        let (x, y) = (
+            last.first().unwrap().parse::<u32>().unwrap(),
+            last.last().unwrap().parse::<u32>().unwrap(),
+        );
+        if a <= x && b >= y || x <= a && y >= b {
+            total += 1
+        }
+    }
+    println!("operation complete in: {:#?}", start.elapsed());
+    total
+}
+
+pub fn main() {
+    let lines = INPUT.par_lines().collect::<Vec<_>>();
+    let answer = part1(&lines);
+    println!("{:#?}", answer);
+    // match sorted_list.first() {
+    //     Some((elf, calories)) => println!("top calories: {calories:?} held by elf {elf:?}"),
+    //     None => anyhow::bail!("empty"),
+    // }
+    // let top_3_total = part2(&sorted_list);
+    // println!("total calories held by top 3 elves: {top_3_total:?}");
+}
