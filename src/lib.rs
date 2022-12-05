@@ -2,6 +2,10 @@ pub mod utils {
     use tracing_subscriber::FmtSubscriber;
 
     pub fn init_logger() {
+        if cfg!(debug_assertions) {
+            use dotenv::dotenv;
+            dotenv().ok();
+        }
         let level = std::env::var("LOG_LEVEL").map_or(tracing::Level::ERROR, |found| {
             match found.trim().to_uppercase().as_ref() {
                 "INFO" => tracing::Level::INFO,
