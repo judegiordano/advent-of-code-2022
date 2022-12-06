@@ -19,14 +19,19 @@ trait StringHelper {
     fn get_str(&self) -> &str;
 }
 
-impl StringHelper for Option<&&str> {
+impl StringHelper for Option<&String> {
     fn input_to_vec(&self) -> Vec<u32> {
         self.map_or_else(
             || {
                 tracing::error!("no vec option found");
                 std::process::exit(1);
             },
-            |str| str.split('-').collect::<Vec<_>>().to_num_vec(),
+            |str| {
+                str.split('-')
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .to_num_vec()
+            },
         )
     }
 
@@ -47,7 +52,7 @@ impl StringHelper for Option<&&str> {
     }
 
     fn get_str(&self) -> &str {
-        self.map_or_else(
+        &self.map_or_else(
             || {
                 tracing::error!("no string option found");
                 std::process::exit(1)
@@ -57,7 +62,7 @@ impl StringHelper for Option<&&str> {
     }
 }
 
-impl ArrayHelper for Vec<&str> {
+impl ArrayHelper for Vec<String> {
     fn to_num_vec(&self) -> Vec<u32> {
         let (a, b) = (self.first().option_to_num(), self.last().option_to_num());
         let mut temp = vec![];
@@ -75,10 +80,21 @@ fn part1(lines: &[&str]) -> u32 {
         .fold(
             || 0,
             |mut acc, line| {
-                let elves = line.split(',').collect::<Vec<_>>();
+                let elves = line
+                    .split(',')
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>();
                 let (first, last) = (elves.first(), elves.last());
-                let first = first.get_str().split('-').collect::<Vec<_>>();
-                let last = last.get_str().split('-').collect::<Vec<_>>();
+                let first = first
+                    .get_str()
+                    .split('-')
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>();
+                let last = last
+                    .get_str()
+                    .split('-')
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>();
                 let (a, b) = (first.first().option_to_num(), first.last().option_to_num());
                 let (x, y) = (last.first().option_to_num(), last.last().option_to_num());
                 if a <= x && b >= y || x <= a && y >= b {
@@ -99,7 +115,10 @@ fn part2(lines: &[&str]) -> u32 {
         .fold(
             || 0,
             |mut acc, line| {
-                let elves = line.split(',').collect::<Vec<_>>();
+                let elves = line
+                    .split(',')
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>();
                 let first_sect = elves.first().input_to_vec();
                 let last_sect = elves.last().input_to_vec();
                 if first_sect.intersect(last_sect).is_empty().not() {
