@@ -26,3 +26,61 @@ pub mod utils {
         }
     }
 }
+
+pub mod types {
+    use std::str::FromStr;
+
+    pub trait VecHelpers {
+        fn get_first(&self) -> String;
+        fn get_last(&self) -> String;
+        fn pop_last(&mut self) -> String;
+    }
+
+    pub trait StringHelpers {
+        fn parse_safe<T: FromStr>(&self) -> T;
+    }
+
+    impl VecHelpers for Vec<String> {
+        fn get_first(&self) -> String {
+            self.first().map_or_else(
+                || {
+                    tracing::error!("no elem found");
+                    std::process::exit(1)
+                },
+                std::string::ToString::to_string,
+            )
+        }
+
+        fn get_last(&self) -> String {
+            self.last().map_or_else(
+                || {
+                    tracing::error!("no elem found");
+                    std::process::exit(1)
+                },
+                std::string::ToString::to_string,
+            )
+        }
+
+        fn pop_last(&mut self) -> String {
+            self.pop().map_or_else(
+                || {
+                    tracing::error!("no elem found for pop");
+                    std::process::exit(1)
+                },
+                |str| str,
+            )
+        }
+    }
+
+    impl StringHelpers for String {
+        fn parse_safe<T: FromStr>(&self) -> T {
+            self.parse::<T>().map_or_else(
+                |_| {
+                    tracing::error!("error parsing integer");
+                    std::process::exit(1)
+                },
+                |int| int,
+            )
+        }
+    }
+}

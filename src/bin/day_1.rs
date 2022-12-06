@@ -54,12 +54,11 @@ pub fn main() {
     init_logger();
     let lines = INPUT.par_lines().collect::<Vec<_>>();
     let sorted_list = part1(&lines);
-    match sorted_list.first() {
-        Some((elf, calories)) => tracing::info!("top calories: {calories:?} held by elf {elf:?}"),
-        None => {
-            tracing::error!("not found");
-            std::process::exit(1)
-        }
+    if let Some((elf, calories)) = sorted_list.first() {
+        tracing::info!("top calories: {calories:?} held by elf {elf:?}");
+    } else {
+        tracing::error!("not found");
+        std::process::exit(1)
     }
     let top_3_total = part2(&sorted_list);
     tracing::info!("total calories held by top 3 elves: {top_3_total:?}");
@@ -76,12 +75,11 @@ pub mod tests {
         init_logger();
         let lines = INPUT.par_lines().collect::<Vec<_>>();
         let sorted_list = part1(&lines);
-        match sorted_list.first() {
-            Some((_, calories)) => assert_eq!(*calories, 69626),
-            None => {
-                tracing::error!("not found");
-                std::process::exit(1)
-            }
+        if let Some((elf, calories)) = sorted_list.first() {
+            tracing::info!("top calories: {calories:?} held by elf {elf:?}")
+        } else {
+            tracing::error!("not found");
+            std::process::exit(1)
         }
         let top_3_total = part2(&sorted_list);
         assert_eq!(top_3_total, 206780);
