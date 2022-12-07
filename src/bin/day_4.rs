@@ -52,7 +52,7 @@ impl StringHelper for Option<&String> {
     }
 
     fn get_str(&self) -> &str {
-        &self.map_or_else(
+        self.map_or_else(
             || {
                 tracing::error!("no string option found");
                 std::process::exit(1)
